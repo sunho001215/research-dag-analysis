@@ -165,6 +165,18 @@ def graph_visualize(node_list, html_path):
     fig.write_html(html_path)
 
 def execution_time_assign(node_list):
+    d_exec_sum, c_exec_sum = 1000, 1000
+
+    while d_exec_sum > d_exec_limit_ and c_exec_sum > c_exec_limit_:
+        d_exec_sum, c_exec_sum = 0, 0
+        for node in node_list:
+            node.d_exec_t = random.randint(d_exec_range_[0] * 10, d_exec_range_[1] * 10)
+            node.d_exec_t = float(node.d_exec_t/10)
+            d_exec_sum += node.d_exec_t
+
+            node.c_exec_t = float(random.randint(c_exec_range_[0], c_exec_range_[1]))
+            c_exec_sum += node.c_exec_t
+
     return node_list
 
 if __name__ == "__main__":
