@@ -1,38 +1,24 @@
 import random
 import os
+import csv
 import plotly.graph_objects as go
+from ros_node import Node
+from tqdm import tqdm
+
+random.seed(1)
 
 ############# PARAM #############
-dag_num_ = 10
+dag_num_ = 100
 # DAG generation parameter
-depth_range_ = [2, 6]
-max_parallelism_ = 4
+depth_range_ = [3, 7]
+max_parallelism_ = 5
 arc_prob_ = 0.05
 # Node execution time parameter
-d_exec_range_ = [0.5, 2.5]
-c_exec_range_ = [15, 40]
-d_exec_limit_ = 35
-c_exec_limit_ = 750
+d_exec_range_ = [0.01, 0.15]
+c_exec_range_ = [1, 40]
+c_exec_limit_ = [250, 600]
+critical_execution_path_portion_ = 0.65
 #################################
-
-class Node(object):
-    idx = 0
-    def __init__(self):
-        # Node Number
-        self.idx = 1
-        self.priority = 1
-
-        # Execution Time
-        self.d_exec_t = 0
-        self.c_exec_t = 0
-        self.period = 100 # ms
-
-        # Graph Info
-        self.parent = []
-        self.child = []
-        self.isSink = False
-        self.isSource = False
-        self.level = 0
 
 def arc_deicision():
     return random.random() < arc_prob_
@@ -164,31 +150,90 @@ def graph_visualize(node_list, html_path):
                 )
     fig.write_html(html_path)
 
+def find_all_paths(node_list, start_vertex, end_vertex, path=[]):
+    path = path + [start_vertex]
+
+    if start_vertex == end_vertex:
+        return [path]
+
+    if start_vertex not in node_list:
+        return []
+    
+    paths = []
+    for child_idx in start_vertex.child:
+        vertex = node_list[child_idx]
+        if vertex not in path:
+            extened_paths = find_all_paths(node_list, vertex, end_vertex, path)
+            for p in extened_paths:
+                paths.append(p)
+    
+    return paths
+
+def find_longest_execution_time_path_dfs(node_list, start_vertex, end_vertex):
+    paths = find_all_paths(node_list, start_vertex, end_vertex)
+
+    costs = []
+    for path in paths:
+        cost = 0
+        for node in path:
+            cost += node.c_exec_t
+        costs.append(cost)
+
+    (m, i) = max((v,i) for i,v in enumerate(costs))
+
+    return m, paths[i]   
+
 def execution_time_assign(node_list):
-    d_exec_sum, c_exec_sum = 1000, 1000
+    paths = find_all_paths(node_list, node_list[0], node_list[len(node_list)-1])
+    
+    max_path_length, longest_execution_time = 0, 0
+    for path in paths:
+        if len(path) > max_path_length:
+            max_path_length = len(path)
 
-    while d_exec_sum > d_exec_limit_ and c_exec_sum > c_exec_limit_:
-        d_exec_sum, c_exec_sum = 0, 0
+    c_exec_sum = 0
+    for node in node_list:
+        node.d_exec_t = random.randint(d_exec_range_[0] * 100, d_exec_range_[1] * 100)
+        node.d_exec_t = float(node.d_exec_t/100)
+
+        node.c_exec_t = float(random.randint(c_exec_range_[0], c_exec_range_[1]))
+        c_exec_sum += node.c_exec_t
+
+    longest_execution_time, longest_execution_time_path = find_longest_execution_time_path_dfs(node_list, node_list[0], node_list[len(node_list)-1])
+
+    return node_list, c_exec_sum, max_path_length, longest_execution_time, longest_execution_time_path
+
+def create_csv_file(node_list, csv_path):
+    with open(csv_path, 'w', newline='') as csv_file:
+        fieldnames = ['node_number', 'level', 'idx', 'priority', 'd_exec_t', 'c_exec_t', 'period', 'isSource', 'isSink', 'parent', 'child']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        
+        num = 0
         for node in node_list:
-            node.d_exec_t = random.randint(d_exec_range_[0] * 10, d_exec_range_[1] * 10)
-            node.d_exec_t = float(node.d_exec_t/10)
-            d_exec_sum += node.d_exec_t
-
-            node.c_exec_t = float(random.randint(c_exec_range_[0], c_exec_range_[1]))
-            c_exec_sum += node.c_exec_t
-
-    return node_list
+            num += 1
+            writer.writerow({'node_number': num, 'level': node.level, 'idx': node.idx, 'priority': node.priority, 
+                             'd_exec_t': node.d_exec_t, 'c_exec_t': node.c_exec_t, 'period': node.period, 'isSource': node.isSource,
+                             'isSink': node.isSink, 'parent': node.parent, 'child': node.child})
 
 if __name__ == "__main__":
     parent_dir = os.getcwd()
     html_dir = parent_dir + '/html/'
     csv_dir = parent_dir + '/csv/raw_data/'
-    for i in range(dag_num_):
+    for i in tqdm(range(dag_num_)):
         name = "DAG_" + str(i+1).zfill(3)
         html_path = html_dir + name + '.html'
         csv_path = csv_dir + name + '.csv'
+        
+        c_exec_sum, max_path_length, longest_execution_time, longest_execution_time_path = 0, 0, 0, []
 
-        node_list = dag_generate()
-        dag_check(node_list)
-        node_list = execution_time_assign(node_list)
+        while c_exec_sum < c_exec_limit_[0] or c_exec_sum > c_exec_limit_[1] \
+                or longest_execution_time < c_exec_sum * critical_execution_path_portion_ \
+                or len(longest_execution_time_path) != max_path_length:
+            node_list = dag_generate()
+            dag_check(node_list)
+            node_list, c_exec_sum, max_path_length, longest_execution_time, longest_execution_time_path = execution_time_assign(node_list)
+            
         graph_visualize(node_list, html_path)
+        create_csv_file(node_list, csv_path)

@@ -1,0 +1,13 @@
+node_number,level,idx,priority,d_exec_t,c_exec_t,period,isSource,isSink,parent,child
+1,0,1,1,0.06,34.0,1000,True,False,[],"[1, 2]"
+2,1,1,1,0.1,26.0,9,False,False,[0],[7]
+3,1,2,1,0.03,35.0,2,False,False,[0],"[3, 4, 6, 9]"
+4,2,1,1,0.1,21.0,4,False,False,[2],"[5, 8]"
+5,2,2,1,0.13,9.0,10,False,False,[2],[7]
+6,3,1,1,0.08,9.0,8,False,False,[3],[10]
+7,3,2,1,0.08,4.0,8,False,False,[2],[10]
+8,3,3,1,0.03,14.0,5,False,False,"[1, 4]",[9]
+9,3,4,1,0.08,28.0,4,False,False,[3],[10]
+10,4,1,1,0.01,7.0,2,False,False,"[2, 7]",[11]
+11,4,2,1,0.08,34.0,4,False,False,"[8, 5, 6]",[11]
+12,5,1,1,0.06,35.0,3,False,True,"[9, 10]",[]
