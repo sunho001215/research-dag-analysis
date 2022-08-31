@@ -46,7 +46,7 @@ def create_launch_file(node_list, file_path, attr):
         if attr == "low_spin" and node.level != 0:
             sub_element5.set("value", str(100))
         elif attr == "high_spin" and node.level != 0:
-            sub_element5.set("value", str(2))
+            sub_element5.set("value", str(1))
         else:
             sub_element5.set("value", str(node.period))
 

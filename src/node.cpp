@@ -86,12 +86,6 @@ void default_waste_time()
         tmp = 1 - tmp;
     }
 
-    if (parent_num_ == 0){
-        publish_message();
-        msg_count_++;
-        activation_ = 1;
-    }
-
     iter_++;
 }
 
@@ -177,12 +171,19 @@ int main(int argc, char **argv)
 
         ros::spinOnce();
         default_waste_time();
+        if (parent_num_ == 0){
+            callback_waste_time();
+        }
 
         clock_gettime(CLOCK_MONOTONIC, &end_time);
 
         FILE *fp = fopen(file_name_.c_str(), "a");
         fprintf(fp, "%d,%d,%ld.%.9ld,%ld.%.9ld,%d,%d\n", iter_, pid_, start_time.tv_sec, start_time.tv_nsec, end_time.tv_sec, end_time.tv_nsec, msg_count_, activation_);
         fclose(fp);
+
+        if (parent_num_ == 0){
+            msg_count_ += 1;
+        }
 
         loop_rate.sleep();
     }
