@@ -4,13 +4,14 @@ import psutil
 import rospkg
 import csv
 import shutil
+import subprocess
 from tqdm import trange
 from time import sleep
 
 ########### PARAM ###########
 dag_num_ = 100
-iter_num_ = 10
-test_exec_time_ = 30
+iter_num_ = 8
+test_exec_time_ = 25
 #############################
 
 def kill_via_pid(pid):
@@ -163,44 +164,125 @@ if __name__ == "__main__":
     pkg_path = rospack.get_path("research-dag-analysis")
     profiling_path = pkg_path + "/profiling/"
 
-    launch_dir = pkg_path + "/launch/low_spin/"
+    launch_dir = pkg_path + "/launch/single_instance_low_spin/"
     launch_list = []
     for path in os.listdir(launch_dir):
         if os.path.isfile(os.path.join(launch_dir, path)):
             launch_list.append(path)
     launch_list.sort()
 
+    #############################
     for i in trange(dag_num_):
         if os.path.exists(profiling_path):
             shutil.rmtree(profiling_path)
         os.mkdir(profiling_path)
 
         # low spin rate experiment
-        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/low_spin/" + launch_list[i]
+        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_low_spin/" + launch_list[i]
         low_spin_result = do_experiment(cmd, pkg_path)
         
-        # high spin rate experiment
-        # cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/high_spin/" + launch_list[i]
-        # high_spin_result = do_experiment(cmd, pkg_path)
-
         # optimization result experiment
-        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/optimization_result/" + launch_list[i]
+        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_optimization_result/" + launch_list[i]
         optimization_result = do_experiment(cmd, pkg_path)
 
-        result_path = pkg_path + "/result/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/single-instance_4-core_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
-        
+
         wr = csv.writer(f)
         wr.writerow(["low_spin_rate"])
         wr.writerow(["max_response_time", low_spin_result[0]])
         wr.writerow(["avg_response_time", low_spin_result[1]])
-
-        # wr.writerow(["high_spin_rate"])
-        # wr.writerow(["max_response_time", high_spin_result[0]])
-        # wr.writerow(["avg_response_time", high_spin_result[1]])
 
         wr.writerow(["optimization_result"])
         wr.writerow(["max_response_time", optimization_result[0]])
         wr.writerow(["avg_response_time", optimization_result[1]])
 
         f.close()
+
+        # multi-instance low spin rate experiment
+        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_low_spin/" + launch_list[i]
+        low_spin_result = do_experiment(cmd, pkg_path)
+        
+        # multi-instance optimization result experiment
+        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_optimization_result/" + launch_list[i]
+        optimization_result = do_experiment(cmd, pkg_path)
+
+        result_path = pkg_path + "/result/multi-instance_4-core_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
+        f = open(result_path, 'w', newline="")
+
+        wr = csv.writer(f)
+        wr.writerow(["low_spin_rate"])
+        wr.writerow(["max_response_time", low_spin_result[0]])
+        wr.writerow(["avg_response_time", low_spin_result[1]])
+
+        wr.writerow(["optimization_result"])
+        wr.writerow(["max_response_time", optimization_result[0]])
+        wr.writerow(["avg_response_time", optimization_result[1]])
+
+        f.close()
+    #############################
+
+    os.system("sudo chrt -r -p 99 10")
+    os.system("sudo chrt -r -p 99 23")
+    os.system("sudo chrt -r -p 99 31")
+    os.system("sudo chrt -r -p 99 39")
+    os.system("sudo chrt -r -p 99 47")
+    os.system("sudo chrt -r -p 99 55")
+    os.system("sudo chrt -r -p 99 63")
+    os.system("sudo chrt -r -p 99 71")
+    os.system("sudo chrt -r -p 99 79")
+    os.system("sudo chrt -r -p 99 87")
+    os.system("sudo chrt -r -p 99 95")
+    os.system("sudo chrt -r -p 99 103")
+    sleep(1)
+
+    #############################
+    for i in trange(dag_num_):
+        if os.path.exists(profiling_path):
+            shutil.rmtree(profiling_path)
+        os.mkdir(profiling_path)
+
+        # low spin rate experiment
+        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_low_spin/" + launch_list[i]
+        low_spin_result = do_experiment(cmd, pkg_path)
+        
+        # optimization result experiment
+        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_optimization_result/" + launch_list[i]
+        optimization_result = do_experiment(cmd, pkg_path)
+
+        result_path = pkg_path + "/result/single-instance_4-core_w-ksoftirq-opt_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
+        f = open(result_path, 'w', newline="")
+
+        wr = csv.writer(f)
+        wr.writerow(["low_spin_rate"])
+        wr.writerow(["max_response_time", low_spin_result[0]])
+        wr.writerow(["avg_response_time", low_spin_result[1]])
+
+        wr.writerow(["optimization_result"])
+        wr.writerow(["max_response_time", optimization_result[0]])
+        wr.writerow(["avg_response_time", optimization_result[1]])
+
+        f.close()
+
+        # multi-instance low spin rate experiment
+        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_low_spin/" + launch_list[i]
+        low_spin_result = do_experiment(cmd, pkg_path)
+        
+        # multi-instance optimization result experiment
+        cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_optimization_result/" + launch_list[i]
+        optimization_result = do_experiment(cmd, pkg_path)
+
+        result_path = pkg_path + "/result/multi-instance_4-core_w-ksoftirq-opt_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
+        f = open(result_path, 'w', newline="")
+
+        wr = csv.writer(f)
+        wr.writerow(["low_spin_rate"])
+        wr.writerow(["max_response_time", low_spin_result[0]])
+        wr.writerow(["avg_response_time", low_spin_result[1]])
+
+        wr.writerow(["optimization_result"])
+        wr.writerow(["max_response_time", optimization_result[0]])
+        wr.writerow(["avg_response_time", optimization_result[1]])
+
+        f.close()
+    #############################

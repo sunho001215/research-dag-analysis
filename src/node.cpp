@@ -26,6 +26,7 @@ std::vector<bool> sub_flag_;
 std::string node_name_, file_name_;
 
 int activation_ = 0;
+struct timespec start_time_, end_time_;
 
 void parameter_init(ros::NodeHandle nh)
 {
@@ -60,7 +61,7 @@ void publisher_init(ros::NodeHandle nh)
     for (int i = 0; i < child_num_; i++)
     {
         std::string topic_name = "topic_" + node_name_.substr(1) + "_node" + std::to_string(child_idx_.at(i)+1);
-        ros::Publisher pub = nh.advertise<std_msgs::String>(topic_name, 10);
+        ros::Publisher pub = nh.advertise<std_msgs::String>(topic_name, 1024);
         publisher_list_.push_back(pub);
     }
 }
@@ -100,6 +101,11 @@ void callback_waste_time()
     publish_message();
 
     activation_ = 1;
+
+    FILE *fp = fopen(file_name_.c_str(), "a");
+    clock_gettime(CLOCK_MONOTONIC, &end_time_);
+    fprintf(fp, "%d,%d,%ld.%.9ld,%ld.%.9ld,%d,%d\n", iter_, pid_, start_time_.tv_sec, start_time_.tv_nsec, end_time_.tv_sec, end_time_.tv_nsec, msg_count_, activation_);
+    fclose(fp);
 }
 
 void topic_callback(const std_msgs::String::ConstPtr &msg, int topic_idx)
@@ -124,7 +130,7 @@ void subscriber_init(ros::NodeHandle nh)
     {
         std::string topic_name = "topic_node" + std::to_string(parent_idx_.at(i)+1) + "_" + node_name_.substr(1);
 
-        ros::Subscriber sub = nh.subscribe<std_msgs::String>(topic_name, 10, boost::bind(topic_callback, _1, i));
+        ros::Subscriber sub = nh.subscribe<std_msgs::String>(topic_name, 1024, boost::bind(topic_callback, _1, i));
 
         subscriber_list_.push_back(sub);
     }
@@ -148,7 +154,6 @@ int main(int argc, char **argv)
     }
 
     ros::init(argc, argv, process_name);
-
     ros::NodeHandle nh;
 
     parameter_init(nh);
@@ -162,26 +167,17 @@ int main(int argc, char **argv)
     iter_ = 0;
     pid_ = getpid();
     
-    struct timespec start_time, end_time;
     while (ros::ok())
     {
-        clock_gettime(CLOCK_MONOTONIC, &start_time);
+        clock_gettime(CLOCK_MONOTONIC, &start_time_);
 
         activation_ = 0;
 
-        ros::spinOnce();
         default_waste_time();
+        ros::spinOnce();
+
         if (parent_num_ == 0){
             callback_waste_time();
-        }
-
-        clock_gettime(CLOCK_MONOTONIC, &end_time);
-
-        FILE *fp = fopen(file_name_.c_str(), "a");
-        fprintf(fp, "%d,%d,%ld.%.9ld,%ld.%.9ld,%d,%d\n", iter_, pid_, start_time.tv_sec, start_time.tv_nsec, end_time.tv_sec, end_time.tv_nsec, msg_count_, activation_);
-        fclose(fp);
-
-        if (parent_num_ == 0){
             msg_count_ += 1;
         }
 

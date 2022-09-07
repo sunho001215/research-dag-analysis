@@ -43,10 +43,10 @@ def create_launch_file(node_list, file_path, attr):
 
         sub_element5 = SubElement(element, "param")
         sub_element5.set("name", "period")
-        if attr == "low_spin" and node.level != 0:
+        if (attr == "single_instance_low_spin" or attr == "multi_instance_low_spin") and node.level != 0:
             sub_element5.set("value", str(100))
-        elif attr == "high_spin" and node.level != 0:
-            sub_element5.set("value", str(1))
+        elif (attr == "multi_instance_optimization_result" or attr == "multi_instance_low_spin") and node.level == 0:
+            sub_element5.set("value", str(100))
         else:
             sub_element5.set("value", str(node.period))
 
@@ -71,10 +71,14 @@ if __name__ == "__main__":
     for file in csv_list:
         node_list = read_csv_file(os.path.join(csv_dir, file))
         
-        low_spin_path = launch_file_dir + 'low_spin/' + file[0:-4] + '.launch'
-        high_spin_path = launch_file_dir + 'high_spin/' + file[0:-4] + '.launch'
-        optimization_result_path = launch_file_dir + 'optimization_result/' + file[0:-4] + '.launch'
+        low_spin_path = launch_file_dir + 'single_instance_low_spin/' + file[0:-4] + '.launch'
+        optimization_result_path = launch_file_dir + 'single_instance_optimization_result/' + file[0:-4] + '.launch'
         
-        create_launch_file(node_list, low_spin_path, "low_spin")
-        create_launch_file(node_list, high_spin_path, "high_spin")
-        create_launch_file(node_list, optimization_result_path, "optimization_result")
+        create_launch_file(node_list, low_spin_path, "single_instance_low_spin")
+        create_launch_file(node_list, optimization_result_path, "single_instance_optimization_result")
+
+        multi_instance_low_spin_path = launch_file_dir + 'multi_instance_low_spin/' + file[0:-4] + '.launch'
+        multi_instance_optimization_result_path = launch_file_dir + 'multi_instance_optimization_result/' + file[0:-4] + '.launch'
+
+        create_launch_file(node_list, multi_instance_low_spin_path, "multi_instance_low_spin")
+        create_launch_file(node_list, multi_instance_optimization_result_path, "multi_instance_optimization_result")
