@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from tqdm import trange
 from time import sleep
+from spin_rate_optimization import read_csv_file
 
 ########### PARAM ###########
 dag_num_ = 100
@@ -34,30 +35,6 @@ def ros_fork_execute(test_cmd):
     kill_via_pid(pid)
     kill_all_ros_node()
     sleep(0.1)
-
-def calculate_response_time(start_idx_list, end_idx_list, start_time_list, end_time_list):
-    response_time_list = []
-
-    start_idx_len = len(start_idx_list)
-    end_idx_len = len(end_idx_list)
-
-    start_idx, end_idx = 0, 0
-    while True:
-        if not start_idx < start_idx_len:
-            break
-        if not end_idx < end_idx_len:
-            break
-
-        if start_idx_list[start_idx] == end_idx_list[end_idx]:
-            response_time_list.append(end_time_list[end_idx] - start_time_list[start_idx])
-            start_idx = start_idx + 1
-            end_idx = end_idx + 1
-        elif start_idx_list[start_idx] > end_idx_list[end_idx]:
-            end_idx = end_idx + 1
-        else:
-            start_idx = start_idx + 1
-            
-    return response_time_list
 
 def get_avg_response_time(response_time):
     sum = 0
@@ -131,13 +108,26 @@ def read_profiling_file(entry_file_path, leaf_file_path):
     
     return start_idx_list, end_idx_list, start_time_list, end_time_list
 
-def get_response_time(pkg_path):
+def get_entry_node_num(file):
+    entry_node_num = 1
+    with open(file, "r") as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        header = next(csv_reader)
+            
+        for row in csv_reader:
+            entry_node_num = int(row[3]) + 1
+            break
+
+    return entry_node_num
+
+def get_response_time(pkg_path, file):
     profiling_path = pkg_path + "/profiling/"
     profiling_list = os.listdir(profiling_path)
-    node_num = len(profiling_list)
 
-    entry_file_path = pkg_path + "/profiling/node1.csv"
-    leaf_file_path = pkg_path + "/profiling/node"+ str(node_num) +".csv"
+    entry_node_num = get_entry_node_num(file)
+
+    entry_file_path = pkg_path + "/profiling/node"+ str(entry_node_num) +".csv"
+    leaf_file_path = pkg_path + "/profiling/node1.csv"
 
     start_idx_list, end_idx_list, start_time_list, end_time_list = read_profiling_file(entry_file_path, leaf_file_path)
     response_time_list = calculate_response_time(start_idx_list, end_idx_list, start_time_list, end_time_list)
@@ -147,17 +137,16 @@ def get_response_time(pkg_path):
 
     return max_response_time, avg_response_time
 
-def do_experiment(test_cmd, pkg_path):
+def do_experiment(test_cmd, pkg_path, file):
     max_response_time_list = []
     avg_response_time_list = []
     for i in range(iter_num_):
         ros_fork_execute(test_cmd)
-        max_response_time, avg_response_time = get_response_time(pkg_path)
+        max_response_time, avg_response_time = get_response_time(pkg_path, file)
         max_response_time_list.append(max_response_time)
         avg_response_time_list.append(avg_response_time)
     
     return get_avg_response_time(max_response_time_list), get_avg_response_time(avg_response_time_list)
-
 
 if __name__ == "__main__":
     rospack = rospkg.RosPack()
@@ -177,15 +166,18 @@ if __name__ == "__main__":
             shutil.rmtree(profiling_path)
         os.mkdir(profiling_path)
 
+        low_spin_csv_path = pkg_path + "/csv/raw_data/" + launch_list[i][0:-7] + ".csv"
+        optimization_result_csv_path = pkg_path + "/csv/optimization_result/" + launch_list[i][0:-7] + ".csv"
+
         # low spin rate experiment
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_low_spin/" + launch_list[i]
-        low_spin_result = do_experiment(cmd, pkg_path)
+        low_spin_result = do_experiment(cmd, pkg_path, low_spin_csv_path)
         
         # optimization result experiment
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_optimization_result/" + launch_list[i]
-        optimization_result = do_experiment(cmd, pkg_path)
+        optimization_result = do_experiment(cmd, pkg_path, optimization_result_csv_path)
 
-        result_path = pkg_path + "/result/single-instance_4-core_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/single-instance_4-core/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
 
         wr = csv.writer(f)
@@ -201,13 +193,13 @@ if __name__ == "__main__":
 
         # multi-instance low spin rate experiment
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_low_spin/" + launch_list[i]
-        low_spin_result = do_experiment(cmd, pkg_path)
+        low_spin_result = do_experiment(cmd, pkg_path, low_spin_csv_path)
         
         # multi-instance optimization result experiment
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_optimization_result/" + launch_list[i]
-        optimization_result = do_experiment(cmd, pkg_path)
+        optimization_result = do_experiment(cmd, pkg_path, optimization_result_csv_path)
 
-        result_path = pkg_path + "/result/multi-instance_4-core_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/multi-instance_4-core/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
 
         wr = csv.writer(f)
@@ -242,15 +234,18 @@ if __name__ == "__main__":
             shutil.rmtree(profiling_path)
         os.mkdir(profiling_path)
 
+        low_spin_csv_path = pkg_path + "/csv/raw_data/" + launch_list[i][0:-7] + ".csv"
+        optimization_result_csv_path = pkg_path + "/csv/optimization_result/" + launch_list[i][0:-7] + ".csv"
+
         # low spin rate experiment
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_low_spin/" + launch_list[i]
-        low_spin_result = do_experiment(cmd, pkg_path)
+        low_spin_result = do_experiment(cmd, pkg_path, low_spin_csv_path)
         
         # optimization result experiment
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_optimization_result/" + launch_list[i]
-        optimization_result = do_experiment(cmd, pkg_path)
+        optimization_result = do_experiment(cmd, pkg_path, optimization_result_csv_path)
 
-        result_path = pkg_path + "/result/single-instance_4-core_w-ksoftirq-opt_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/single-instance_4-core_w-ksoftirq-opt/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
 
         wr = csv.writer(f)
@@ -266,13 +261,13 @@ if __name__ == "__main__":
 
         # multi-instance low spin rate experiment
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_low_spin/" + launch_list[i]
-        low_spin_result = do_experiment(cmd, pkg_path)
+        low_spin_result = do_experiment(cmd, pkg_path, low_spin_csv_path)
         
         # multi-instance optimization result experiment
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_optimization_result/" + launch_list[i]
-        optimization_result = do_experiment(cmd, pkg_path)
+        optimization_result = do_experiment(cmd, pkg_path, optimization_result_csv_path)
 
-        result_path = pkg_path + "/result/multi-instance_4-core_w-ksoftirq-opt_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/multi-instance_4-core_w-ksoftirq-opt/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
 
         wr = csv.writer(f)

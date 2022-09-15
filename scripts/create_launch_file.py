@@ -20,17 +20,23 @@ def create_launch_file(node_list, file_path, attr):
 
         element = Element("node")
         element.set("pkg", "research-dag-analysis")
-        element.set("type", "node"+str(idx+1))
-        element.set("name", "node"+str(idx+1))
+        element.set("type", "node"+str(node.priority + 1))
+        element.set("name", "node"+str(node.priority + 1))
         element.set("output", "screen")
         root.append(element)
 
+        child_node, parent_node = [], []
+        for parent_idx in node.parent:
+            parent_node.append(node_list[parent_idx].priority)
+        for child_idx in node.child:
+            child_node.append(node_list[child_idx].priority)
+
         sub_element1 = SubElement(element, "rosparam")
-        sub_element1.text = str(node.parent)
+        sub_element1.text = str(parent_node)
         sub_element1.set("param", "parent_idx")
 
         sub_element2 = SubElement(element, "rosparam")
-        sub_element2.text = str(node.child)
+        sub_element2.text = str(child_node)
         sub_element2.set("param", "child_idx")
 
         sub_element3 = SubElement(element, "param")
@@ -69,16 +75,20 @@ if __name__ == "__main__":
     csv_list.sort()
     
     for file in csv_list:
+        csv_dir = parent_dir + '/csv/raw_data/'
         node_list = read_csv_file(os.path.join(csv_dir, file))
         
         low_spin_path = launch_file_dir + 'single_instance_low_spin/' + file[0:-4] + '.launch'
-        optimization_result_path = launch_file_dir + 'single_instance_optimization_result/' + file[0:-4] + '.launch'
-        
-        create_launch_file(node_list, low_spin_path, "single_instance_low_spin")
-        create_launch_file(node_list, optimization_result_path, "single_instance_optimization_result")
-
         multi_instance_low_spin_path = launch_file_dir + 'multi_instance_low_spin/' + file[0:-4] + '.launch'
+
+        create_launch_file(node_list, low_spin_path, "single_instance_low_spin")
+        create_launch_file(node_list, multi_instance_low_spin_path, "multi_instance_low_spin")
+
+        csv_dir = parent_dir + '/csv/optimization_result/'
+        node_list = read_csv_file(os.path.join(csv_dir, file))
+
+        optimization_result_path = launch_file_dir + 'single_instance_optimization_result/' + file[0:-4] + '.launch'
         multi_instance_optimization_result_path = launch_file_dir + 'multi_instance_optimization_result/' + file[0:-4] + '.launch'
 
-        create_launch_file(node_list, multi_instance_low_spin_path, "multi_instance_low_spin")
+        create_launch_file(node_list, optimization_result_path, "single_instance_optimization_result")
         create_launch_file(node_list, multi_instance_optimization_result_path, "multi_instance_optimization_result")

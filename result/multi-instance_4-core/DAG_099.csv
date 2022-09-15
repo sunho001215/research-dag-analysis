@@ -1,6 +1,6 @@
 low_spin_rate
-max_response_time,0.3827380747497955
-avg_response_time,0.35681358661180146
+max_response_time,0.45567403612403723
+avg_response_time,0.37750367674951996
 optimization_result
-max_response_time,0.20910764112522884
-avg_response_time,0.16173564217391995
+max_response_time,0.21113264587438607
+avg_response_time,0.10098418366847216

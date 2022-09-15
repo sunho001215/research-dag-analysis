@@ -11,13 +11,13 @@ random.seed(1)
 dag_num_ = 100
 # DAG generation parameter
 depth_range_ = [3, 7]
-max_parallelism_ = 5
+max_parallelism_ = 4
 arc_prob_ = 0.05
 # Node execution time parameter
-d_exec_range_ = [0.01, 0.15]
+d_exec_range_ = [0.01, 0.30]
 c_exec_range_ = [1, 40]
-c_exec_limit_ = [250, 600]
-critical_execution_path_portion_ = 0.65
+c_exec_limit_ = [250, 400]
+# critical_execution_path_portion_ = 0.65
 #################################
 
 def arc_deicision():
@@ -28,7 +28,7 @@ def dag_generate():
     
     node_num = []
     for i in range(dag_depth):
-        node_num.append(random.randint(2, max_parallelism_))
+        node_num.append(random.randint(1, max_parallelism_))
     
     node_list = []
     node_idx = 0
@@ -107,7 +107,8 @@ def graph_visualize(node_list, html_path):
         # add node
         node_x.append(node.level)
         node_y.append(node.idx)
-        node_text.append('Default Execution Time: ' + str(node.d_exec_t) + ", Callback Execution Time: " + str(node.c_exec_t))
+        node_text.append('Default Execution Time: ' + str(node.d_exec_t) + ", Callback Execution Time: " + str(node.c_exec_t) \
+                         + ", Node Priority: " + str(node.priority))
         # add edge
         for child_node in node.child:
             edge_x.append(node.level)
@@ -217,6 +218,57 @@ def create_csv_file(node_list, csv_path):
                              'd_exec_t': node.d_exec_t, 'c_exec_t': node.c_exec_t, 'period': node.period, 'isSource': node.isSource,
                              'isSink': node.isSink, 'parent': node.parent, 'child': node.child})
 
+def find_longest_execution_time_path_dfs(node_list, start_vertex, end_vertex):
+    paths = find_all_paths(node_list, start_vertex, end_vertex)
+
+    costs = []
+    for path in paths:
+        cost = 0
+        for node in path:
+            cost += node.c_exec_t
+        costs.append(cost)
+
+    (m, i) = max((v,i) for i,v in enumerate(costs))
+
+    return m, paths[i]   
+
+def find_longest_path_dfs(node_list, start_vertex, end_vertex):
+    paths = find_all_paths(node_list, start_vertex, end_vertex)
+
+    costs = []
+    for path in paths:
+        cost = 0
+        for node in path:
+            if node.level != 0:
+                cost += node.period + node.c_exec_t
+            else:
+                cost += node.c_exec_t
+        costs.append(cost)
+
+    (m, i) = max((v,i) for i,v in enumerate(costs))
+
+    return m, paths[i] 
+
+def calculate_critical_length(node_list):
+    critical_length, critical_nodes = find_longest_path_dfs(node_list, node_list[0], node_list[len(node_list)-1])
+    return critical_length, critical_nodes
+
+def node_priority_assign(node_list):
+    _, critical_nodes = calculate_critical_length(node_list)
+
+    p = 0
+    for node in reversed(node_list):
+        if node in critical_nodes:
+            node.priority = p
+            p += 1
+    
+    for node in reversed(node_list):
+        if node not in critical_nodes:
+            node.priority = p
+            p += 1
+    
+    return node_list
+
 if __name__ == "__main__":
     parent_dir = os.getcwd()
     html_dir = parent_dir + '/html/'
@@ -228,12 +280,13 @@ if __name__ == "__main__":
         
         c_exec_sum, max_path_length, longest_execution_time, longest_execution_time_path = 0, 0, 0, []
 
-        while c_exec_sum < c_exec_limit_[0] or c_exec_sum > c_exec_limit_[1] \
-                or longest_execution_time < c_exec_sum * critical_execution_path_portion_ \
-                or len(longest_execution_time_path) != max_path_length:
+        while c_exec_sum < c_exec_limit_[0] or c_exec_sum > c_exec_limit_[1]:
+                # or longest_execution_time < c_exec_sum * critical_execution_path_portion_ \
+                # or len(longest_execution_time_path) != max_path_length:
             node_list = dag_generate()
             dag_check(node_list)
             node_list, c_exec_sum, max_path_length, longest_execution_time, longest_execution_time_path = execution_time_assign(node_list)
+            node_list = node_priority_assign(node_list)
             
         graph_visualize(node_list, html_path)
         create_csv_file(node_list, csv_path)

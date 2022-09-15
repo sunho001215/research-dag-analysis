@@ -1,0 +1,100 @@
+<launch>
+	<node name="node1" output="screen" pkg="research-dag-analysis" type="node1">
+		<rosparam param="parent_idx">[]</rosparam>
+		<rosparam param="child_idx">[1, 2]</rosparam>
+		<param name="default_waste_time" value="0.1" />
+		<param name="callback_waste_time" value="23.9" />
+		<param name="period" value="1000" />
+	</node>
+	<node name="node2" output="screen" pkg="research-dag-analysis" type="node2">
+		<rosparam param="parent_idx">[0]</rosparam>
+		<rosparam param="child_idx">[5, 6, 7]</rosparam>
+		<param name="default_waste_time" value="0.11" />
+		<param name="callback_waste_time" value="3.89" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node3" output="screen" pkg="research-dag-analysis" type="node3">
+		<rosparam param="parent_idx">[0]</rosparam>
+		<rosparam param="child_idx">[3, 4, 8]</rosparam>
+		<param name="default_waste_time" value="0.07" />
+		<param name="callback_waste_time" value="23.93" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node4" output="screen" pkg="research-dag-analysis" type="node4">
+		<rosparam param="parent_idx">[2]</rosparam>
+		<rosparam param="child_idx">[9]</rosparam>
+		<param name="default_waste_time" value="0.06" />
+		<param name="callback_waste_time" value="30.94" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node5" output="screen" pkg="research-dag-analysis" type="node5">
+		<rosparam param="parent_idx">[2]</rosparam>
+		<rosparam param="child_idx">[10]</rosparam>
+		<param name="default_waste_time" value="0.02" />
+		<param name="callback_waste_time" value="36.98" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node6" output="screen" pkg="research-dag-analysis" type="node6">
+		<rosparam param="parent_idx">[1]</rosparam>
+		<rosparam param="child_idx">[9]</rosparam>
+		<param name="default_waste_time" value="0.08" />
+		<param name="callback_waste_time" value="1.92" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node7" output="screen" pkg="research-dag-analysis" type="node7">
+		<rosparam param="parent_idx">[1]</rosparam>
+		<rosparam param="child_idx">[11]</rosparam>
+		<param name="default_waste_time" value="0.05" />
+		<param name="callback_waste_time" value="17.95" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node8" output="screen" pkg="research-dag-analysis" type="node8">
+		<rosparam param="parent_idx">[1]</rosparam>
+		<rosparam param="child_idx">[11]</rosparam>
+		<param name="default_waste_time" value="0.12" />
+		<param name="callback_waste_time" value="0.88" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node9" output="screen" pkg="research-dag-analysis" type="node9">
+		<rosparam param="parent_idx">[2]</rosparam>
+		<rosparam param="child_idx">[11]</rosparam>
+		<param name="default_waste_time" value="0.05" />
+		<param name="callback_waste_time" value="12.95" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node10" output="screen" pkg="research-dag-analysis" type="node10">
+		<rosparam param="parent_idx">[3, 5]</rosparam>
+		<rosparam param="child_idx">[12]</rosparam>
+		<param name="default_waste_time" value="0.01" />
+		<param name="callback_waste_time" value="34.99" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node11" output="screen" pkg="research-dag-analysis" type="node11">
+		<rosparam param="parent_idx">[4]</rosparam>
+		<rosparam param="child_idx">[12]</rosparam>
+		<param name="default_waste_time" value="0.01" />
+		<param name="callback_waste_time" value="4.99" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node12" output="screen" pkg="research-dag-analysis" type="node12">
+		<rosparam param="parent_idx">[6, 7, 8]</rosparam>
+		<rosparam param="child_idx">[13]</rosparam>
+		<param name="default_waste_time" value="0.07" />
+		<param name="callback_waste_time" value="10.93" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node13" output="screen" pkg="research-dag-analysis" type="node13">
+		<rosparam param="parent_idx">[10, 9]</rosparam>
+		<rosparam param="child_idx">[13]</rosparam>
+		<param name="default_waste_time" value="0.15" />
+		<param name="callback_waste_time" value="38.85" />
+		<param name="period" value="100" />
+	</node>
+	<node name="node14" output="screen" pkg="research-dag-analysis" type="node14">
+		<rosparam param="parent_idx">[11, 12]</rosparam>
+		<rosparam param="child_idx">[]</rosparam>
+		<param name="default_waste_time" value="0.11" />
+		<param name="callback_waste_time" value="32.89" />
+		<param name="period" value="100" />
+	</node>
+</launch>
