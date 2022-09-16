@@ -253,20 +253,71 @@ def calculate_critical_length(node_list):
     critical_length, critical_nodes = find_longest_path_dfs(node_list, node_list[0], node_list[len(node_list)-1])
     return critical_length, critical_nodes
 
-def node_priority_assign(node_list):
-    _, critical_nodes = calculate_critical_length(node_list)
+def compute_length(node_list):
+    lf = [0] * len(node_list)
+    lf[0] = node_list[0].c_exec_t
+    for idx, node in enumerate(node_list):
+        if node.level != 0:
+            max_lf = 0
+            for parent_node in node.parent:
+                if lf[parent_node] > max_lf:
+                    max_lf = lf[parent_node]
+            lf[idx] = node.period + node.c_exec_t + max_lf
 
+    lb = [0] * len(node_list)
+    lb[len(node_list)-1] = node_list[len(node_list)-1].c_exec_t
+    for idx, node in reversed(list(enumerate(node_list))):
+        if idx != len(node_list)-1:
+            max_lb_w_t = 0
+            for child_node in node.child:
+                if lb[child_node] + node_list[child_node].period > max_lb_w_t:
+                    max_lb_w_t = lb[child_node] + node_list[child_node].period
+            lb[idx] = node.c_exec_t + max_lb_w_t
+
+    l = [0] * len(node_list)
+    for idx, node in enumerate(node_list):
+        l[idx] = lf[idx] + lb[idx] - node.c_exec_t
+    
+    return l
+
+def no_predecessor(node, node_assign):
+    for child_node in node.child:
+        if node_assign[child_node] == False:
+            return False
+    return True
+
+def node_priority_assign(node_list):
+    l = compute_length(node_list)
+    
+    node_assign = [False] * len(node_list)
     p = 0
-    for node in reversed(node_list):
-        if node in critical_nodes:
-            node.priority = p
+
+    while True:
+        A = []
+        for idx, node in reversed(list(enumerate(node_list))):
+            if no_predecessor(node, node_assign) and not node_assign[idx]:
+                A.append(idx)
+        
+        while len(A) != 0:
+            max = 0
+            max_idx = A[0]
+            value = l[A[0]]
+            for idx, val in enumerate(A):
+                if max < l[val]:
+                    max = l[val]
+                    max_idx = idx
+                    value = val
+
+            node_list[A[max_idx]].priority = p
             p += 1
-    
-    for node in reversed(node_list):
-        if node not in critical_nodes:
-            node.priority = p
-            p += 1
-    
+
+            node_assign[A[max_idx]] = True
+
+            A.remove(value)
+
+        if False not in node_assign:
+            break
+
     return node_list
 
 if __name__ == "__main__":
