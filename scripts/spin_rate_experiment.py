@@ -132,6 +132,9 @@ def get_response_time(pkg_path, file):
     start_idx_list, end_idx_list, start_time_list, end_time_list = read_profiling_file(entry_file_path, leaf_file_path)
     response_time_list = calculate_response_time(start_idx_list, end_idx_list, start_time_list, end_time_list)
 
+    if len(response_time_list) <= 2:
+        return 0, 0
+
     max_response_time = get_max_response_time(response_time_list[2:])
     avg_response_time = get_avg_response_time(response_time_list[2:])
 
@@ -143,9 +146,10 @@ def do_experiment(test_cmd, pkg_path, file):
     for i in range(iter_num_):
         ros_fork_execute(test_cmd)
         max_response_time, avg_response_time = get_response_time(pkg_path, file)
-        max_response_time_list.append(max_response_time)
-        avg_response_time_list.append(avg_response_time)
-    
+        if max_response_time != 0 and avg_response_time != 0:
+            max_response_time_list.append(max_response_time)
+            avg_response_time_list.append(avg_response_time)
+
     return get_avg_response_time(max_response_time_list), get_avg_response_time(avg_response_time_list)
 
 if __name__ == "__main__":
@@ -177,7 +181,7 @@ if __name__ == "__main__":
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_optimization_result/" + launch_list[i]
         optimization_result = do_experiment(cmd, pkg_path, optimization_result_csv_path)
 
-        result_path = pkg_path + "/result/single-instance_4-core/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/single-instance_4-core_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
 
         wr = csv.writer(f)
@@ -199,7 +203,7 @@ if __name__ == "__main__":
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_optimization_result/" + launch_list[i]
         optimization_result = do_experiment(cmd, pkg_path, optimization_result_csv_path)
 
-        result_path = pkg_path + "/result/multi-instance_4-core/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/multi-instance_4-core_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
 
         wr = csv.writer(f)
@@ -245,7 +249,7 @@ if __name__ == "__main__":
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/single_instance_optimization_result/" + launch_list[i]
         optimization_result = do_experiment(cmd, pkg_path, optimization_result_csv_path)
 
-        result_path = pkg_path + "/result/single-instance_4-core_w-ksoftirq-opt/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/single-instance_4-core_w-ksoftirq-opt_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
 
         wr = csv.writer(f)
@@ -267,7 +271,7 @@ if __name__ == "__main__":
         cmd = "taskset -c 8,9,10,11 roslaunch " + pkg_path + "/launch/multi_instance_optimization_result/" + launch_list[i]
         optimization_result = do_experiment(cmd, pkg_path, optimization_result_csv_path)
 
-        result_path = pkg_path + "/result/multi-instance_4-core_w-ksoftirq-opt/" + launch_list[i][0:-7] + ".csv"
+        result_path = pkg_path + "/result/multi-instance_4-core_w-ksoftirq-opt_w-priority-assignment/" + launch_list[i][0:-7] + ".csv"
         f = open(result_path, 'w', newline="")
 
         wr = csv.writer(f)

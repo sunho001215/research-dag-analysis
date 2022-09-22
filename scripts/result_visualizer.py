@@ -28,6 +28,8 @@ def read_data(file_path):
     return num1, num2, num3, num4
 
 def list_average(lst):
+    if len(lst) == 0:
+        return 0
     return sum(lst)/len(lst)
 
 # ( , O3, O2, O2_O3, O1, O1_O3, O1_O2, O1_O2_O3)

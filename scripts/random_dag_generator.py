@@ -16,7 +16,7 @@ arc_prob_ = 0.05
 # Node execution time parameter
 d_exec_range_ = [0.01, 0.30]
 c_exec_range_ = [1, 40]
-c_exec_limit_ = [250, 400]
+c_exec_limit_ = [220, 280]
 # critical_execution_path_portion_ = 0.65
 #################################
 
