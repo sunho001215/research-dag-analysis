@@ -36,8 +36,10 @@ def list_average(lst):
 # ( , O3, O2, O2_O3, O1, O1_O3, O1_O2, O1_O2_O3)
 def create_histogram_value(save_path, single_instance_values, multi_instance_values):
     x = np.arange(8)
-    xticks = ["X\nX\nX", "X\nX\nO", "X\nO\nX", "X\nO\nO", \
-              "O\nX\nX", "O\nX\nO", "O\nO\nX", "O\nO\nO"]
+    # xticks = ["X\nX\nX", "X\nX\nO", "X\nO\nX", "X\nO\nO", \
+    #           "O\nX\nX", "O\nX\nO", "O\nO\nX", "O\nO\nO"]
+    xticks = ["(X,X,X)", "(X,X,O)", "(X,O,X)", "(X,O,O)", \
+              "(O,X,X)", "(O,X,O)", "(O,O,X)", "(O,O,O)"]
     yticks = ["0", "0.5", "1", "1.5", "2"]
 
     fig, (ax0, ax1) = plt.subplots(ncols=2, figsize=(14,6))
@@ -60,69 +62,84 @@ def create_histogram_value(save_path, single_instance_values, multi_instance_val
     ax1.set_yticklabels(yticks)
     ax1.set_ylim(bottom = 0.0, top = 2.0)
 
-    ax0.set_xlabel("Spin Rate Optimization\nHigh <ksoftirqd> Priority\nTopological Order Priority", fontsize = 10, loc="left")
-    ax0.xaxis.set_label_coords(-0.34,-0.02)
+    ax0.set_xlabel("(Optimization A, Optimization B, Optimization C)", fontsize = 10, loc="left")
+    ax0.xaxis.set_label_coords(0.17,-0.075)
+
+    ax1.set_xlabel("(Optimization A, Optimization B, Optimization C)", fontsize = 10, loc="left")
+    ax1.xaxis.set_label_coords(0.17,-0.075)
+
+    print(single_instance_values)
+    print(multi_instance_values)
 
     plt.savefig(save_path)
 
 # (O1, O1_O3, O1_O2, O1_O2_O3)
-def create_histogram_count(save_path, single_instance_values, multi_instance_values):
-    labels = ["single-instance", "multi-instance"]
-    O1_count = [0, 0]
-    O1_O3_count = [0, 0]
-    O1_O2_count = [0, 0]
-    O1_O2_O3_count = [0, 0]
+def create_histogram_count(save_path, single_instance_values, multi_instance_values, real_length):
+    labels = ["0.12", "0.16", "0.20", "0.24", "0.28"]
+    O1_count = [0, 0, 0, 0, 0]
+    O1_O3_count = [0, 0, 0, 0, 0]
+    O1_O2_count = [0, 0, 0, 0, 0]
+    O1_O2_O3_count = [0, 0, 0, 0, 0]
 
-    for i in range(len(single_instance_values[0])):
-        if single_instance_values[0][i] < single_instance_values[1][i] and \
-            single_instance_values[0][i] < single_instance_values[2][i] and \
-            single_instance_values[0][i] < single_instance_values[3][i]:
-            O1_count[0] += 1
-        elif single_instance_values[1][i] < single_instance_values[0][i] and \
-            single_instance_values[1][i] < single_instance_values[2][i] and \
-            single_instance_values[1][i] < single_instance_values[3][i]:
-            O1_O3_count[0] += 1
-        elif single_instance_values[2][i] < single_instance_values[0][i] and \
-            single_instance_values[2][i] < single_instance_values[1][i] and \
-            single_instance_values[2][i] < single_instance_values[3][i]:
-            O1_O2_count[0] += 1
-        else:
-            O1_O2_O3_count[0] += 1
+    # for i in range(len(single_instance_values[0])):
+    #     if single_instance_values[0][i] < single_instance_values[1][i] and \
+    #         single_instance_values[0][i] < single_instance_values[2][i] and \
+    #         single_instance_values[0][i] < single_instance_values[3][i]:
+    #         O1_count[0] += 1
+    #     elif single_instance_values[1][i] < single_instance_values[0][i] and \
+    #         single_instance_values[1][i] < single_instance_values[2][i] and \
+    #         single_instance_values[1][i] < single_instance_values[3][i]:
+    #         O1_O3_count[0] += 1
+    #     elif single_instance_values[2][i] < single_instance_values[0][i] and \
+    #         single_instance_values[2][i] < single_instance_values[1][i] and \
+    #         single_instance_values[2][i] < single_instance_values[3][i]:
+    #         O1_O2_count[0] += 1
+    #     else:
+    #         O1_O2_O3_count[0] += 1
     
     for i in range(len(multi_instance_values[0])):
+        idx = int((real_length[i]-0.1) / (0.04))
         if multi_instance_values[0][i] < multi_instance_values[1][i] and \
             multi_instance_values[0][i] < multi_instance_values[2][i] and \
             multi_instance_values[0][i] < multi_instance_values[3][i]:
-            O1_count[1] += 1
+            O1_count[idx] += 1
         elif multi_instance_values[1][i] < multi_instance_values[0][i] and \
             multi_instance_values[1][i] < multi_instance_values[2][i] and \
             multi_instance_values[1][i] < multi_instance_values[3][i]:
-            O1_O3_count[1] += 1
+            O1_O3_count[idx] += 1
         elif multi_instance_values[2][i] < multi_instance_values[0][i] and \
             multi_instance_values[2][i] < multi_instance_values[1][i] and \
             multi_instance_values[2][i] < multi_instance_values[3][i]:
-            O1_O2_count[1] += 1
+            O1_O2_count[idx] += 1
         else:
-            O1_O2_O3_count[1] += 1  
+            O1_O2_O3_count[idx] += 1 
+
+    for i in range(5):
+        cnt = O1_count[i] + O1_O2_count[i] + O1_O3_count[i] + O1_O2_O3_count[i]
+        O1_count[i] = O1_count[i] * 100 / cnt
+        O1_O2_count[i] = O1_O2_count[i] * 100 / cnt
+        O1_O3_count[i] = O1_O3_count[i] * 100 / cnt
+        O1_O2_O3_count[i] = O1_O2_O3_count[i] * 100 / cnt
 
     width = 0.6       # the width of the bars: can also be len(x) sequence
 
     fig, ax = plt.subplots()
 
-    p1 = ax.bar(labels, O1_count, width, bottom=[a + b + c for a, b, c in zip(O1_O3_count, O1_O2_count, O1_O2_O3_count)], \
-            label='spin rate optimization', color='whitesmoke')
-    p2 = ax.bar(labels, O1_O3_count, width, bottom=[a + b for a, b in zip(O1_O2_count, O1_O2_O3_count)], label='spin rate optimization\n+ node priority assignment',\
-            color='lightgrey')
-    p3 = ax.bar(labels, O1_O2_count, width, bottom=O1_O2_O3_count,\
-            label='spin rate optimization\n+ high <ksoftirqd> priority', color='darkgrey')
+    p1 = ax.bar(labels, O1_count, width, bottom=[a + b + c for a, b, c in zip(O1_O2_count, O1_O3_count, O1_O2_O3_count)], \
+            label='A', color='lightgrey')
+    p2 = ax.bar(labels, O1_O2_count, width, bottom=[a + b for a, b in zip(O1_O3_count, O1_O2_O3_count)], label='A + B',\
+            color='darkgray')
+    p3 = ax.bar(labels, O1_O3_count, width, bottom=O1_O2_O3_count,\
+            label='A + C', color='dimgray')
     p4 = ax.bar(labels, O1_O2_O3_count, width, \
-            label='spin rate optimization\n+ high <ksoftirqd> priority\n+ node priority assignment', color='dimgray')
+            label='A + B + C', color='black')
 
+    ax.set_xlabel('Instance Length (s)')
     ax.set_ylabel('Ratio (%)')
     ax.set_title('Best-Performance Settings')
     
     box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+    ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
     
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
@@ -158,6 +175,7 @@ if __name__ == "__main__":
     = [], [], [], [], [], [], [] ,[]
 
 
+    real_length = []
     for i in range(dag_num_):
         name = "DAG_" + str(i+1).zfill(3)
         ## Single-Instance Experiment Result
@@ -202,6 +220,8 @@ if __name__ == "__main__":
         multi_instance_O1_max.append(n3/base_max)
         multi_instance_O1_avg.append(n4/base_avg)
 
+        real_length.append(n3)
+
         file_path = result_dir + "multi-instance_4-core_w-ksoftirq-opt/" + name + ".csv"
         n1, n2, n3, n4 =read_data(file_path)
         multi_instance_O2_max.append(n1/base_max)
@@ -223,9 +243,14 @@ if __name__ == "__main__":
         multi_instance_O1_O2_O3_max.append(n3/base_max)
         multi_instance_O1_O2_O3_avg.append(n4/base_avg)
 
+    # res = [i / j for i, j in zip(multi_instance_O1_O2_max, multi_instance_O1_max)]
+    # plt.scatter(real_length, res)
+    # plt.show()
+    # print()
+
     create_histogram_count(parent_dir + "/histogram/4-core_max_count.png", [single_instance_O1_max, single_instance_O1_O3_max, \
                      single_instance_O1_O2_max, single_instance_O1_O2_O3_max], [multi_instance_O1_max, multi_instance_O1_O3_max, \
-                     multi_instance_O1_O2_max, multi_instance_O1_O2_O3_max])
+                     multi_instance_O1_O2_max, multi_instance_O1_O2_O3_max], real_length)
     
     # create_histogram_count(parent_dir + "/histogram/4-core_avg_count.png", [single_instance_O1_avg, single_instance_O1_O3_avg, \
     #                  single_instance_O1_O2_avg, single_instance_O1_O2_O3_avg], [multi_instance_O1_avg, multi_instance_O1_O3_avg, \
