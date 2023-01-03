@@ -127,19 +127,19 @@ def create_histogram_count(save_path, single_instance_values, multi_instance_val
 
     p1 = ax.bar(labels, O1_count, width, bottom=[a + b + c for a, b, c in zip(O1_O2_count, O1_O3_count, O1_O2_O3_count)], \
             label='A', color='lightgrey')
-    p2 = ax.bar(labels, O1_O2_count, width, bottom=[a + b for a, b in zip(O1_O3_count, O1_O2_O3_count)], label='A + B',\
+    p2 = ax.bar(labels, O1_O2_count, width, bottom=[a + b for a, b in zip(O1_O3_count, O1_O2_O3_count)], label='A+B',\
             color='darkgray')
     p3 = ax.bar(labels, O1_O3_count, width, bottom=O1_O2_O3_count,\
-            label='A + C', color='dimgray')
+            label='A+C', color='dimgray')
     p4 = ax.bar(labels, O1_O2_O3_count, width, \
-            label='A + B + C', color='black')
+            label='A+B+C', color='black')
 
     ax.set_xlabel('Instance Length (s)')
     ax.set_ylabel('Ratio (%)')
     ax.set_title('Best-Performance Settings')
     
     box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+    ax.set_position([box.x0, box.y0, box.width * 0.65, box.height])
     
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
