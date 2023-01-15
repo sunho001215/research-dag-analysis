@@ -37,12 +37,18 @@ def ros_fork_execute(test_cmd):
     sleep(0.1)
 
 def get_avg_response_time(response_time):
+    if len(response_time) == 0:
+        return 0
+
     sum = 0
     for value in response_time:
         sum += value
     return sum / len(response_time)
 
 def get_max_response_time(response_time):
+    if len(response_time) == 0:
+        return 0
+
     max = 0
     for value in response_time:
         if(value > max):
@@ -116,7 +122,8 @@ def get_entry_node_num(file):
             
         for row in csv_reader:
             entry_node_num = int(row[3]) + 1
-            break
+            if "He" not in file:
+                break
 
     return entry_node_num
 
@@ -126,8 +133,12 @@ def get_response_time(pkg_path, file):
 
     entry_node_num = get_entry_node_num(file)
 
-    entry_file_path = pkg_path + "/profiling/node"+ str(entry_node_num) +".csv"
-    leaf_file_path = pkg_path + "/profiling/node1.csv"
+    if "He" in file:
+        leaf_file_path = pkg_path + "/profiling/node"+ str(entry_node_num) +".csv"
+        entry_file_path = pkg_path + "/profiling/node1.csv"
+    else:
+        entry_file_path = pkg_path + "/profiling/node"+ str(entry_node_num) +".csv"
+        leaf_file_path = pkg_path + "/profiling/node1.csv"
 
     start_idx_list, end_idx_list, start_time_list, end_time_list = read_profiling_file(entry_file_path, leaf_file_path)
     response_time_list = calculate_response_time(start_idx_list, end_idx_list, start_time_list, end_time_list)
@@ -143,14 +154,17 @@ def get_response_time(pkg_path, file):
 def do_experiment(test_cmd, pkg_path, file):
     max_response_time_list = []
     avg_response_time_list = []
+
+    is_failed = True
     for i in range(iter_num_):
         ros_fork_execute(test_cmd)
         max_response_time, avg_response_time = get_response_time(pkg_path, file)
         if max_response_time != 0 and avg_response_time != 0:
             max_response_time_list.append(max_response_time)
             avg_response_time_list.append(avg_response_time)
+            is_failed = False
 
-    return get_avg_response_time(max_response_time_list), get_avg_response_time(avg_response_time_list)
+    return get_avg_response_time(max_response_time_list), get_avg_response_time(avg_response_time_list), is_failed
 
 if __name__ == "__main__":
     rospack = rospkg.RosPack()

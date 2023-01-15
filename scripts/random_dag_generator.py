@@ -278,16 +278,16 @@ def compute_length(node_list):
     for idx, node in enumerate(node_list):
         l[idx] = lf[idx] + lb[idx] - node.c_exec_t
     
-    return l
+    return l, lb
 
-def no_predecessor(node, node_assign):
+def no_successor(node, node_assign):
     for child_node in node.child:
         if node_assign[child_node] == False:
             return False
     return True
 
 def node_priority_assign(node_list):
-    l = compute_length(node_list)
+    l, _ = compute_length(node_list)
     
     node_assign = [False] * len(node_list)
     p = 0
@@ -295,7 +295,7 @@ def node_priority_assign(node_list):
     while True:
         A = []
         for idx, node in reversed(list(enumerate(node_list))):
-            if no_predecessor(node, node_assign) and not node_assign[idx]:
+            if no_successor(node, node_assign) and not node_assign[idx]:
                 A.append(idx)
         
         while len(A) != 0:

@@ -33,25 +33,41 @@ def list_average(lst):
         return 0
     return sum(lst)/len(lst)
 
-def create_histogram_value_Park(save_path, single_instance_values):
-    xticks = ["Base", "Park", "Ours"]
+def create_histogram_value_Park_He(save_path, single_instance_values, multi_instance_values):
+    multi_instance_values[1] = multi_instance_values[1] / multi_instance_values[0]
+    multi_instance_values[2] = multi_instance_values[2] / multi_instance_values[0]
+    multi_instance_values[0] = multi_instance_values[0] / multi_instance_values[0]
+
+    xticks_1 = ["Base", "Park", "Ours"]
+    xticks_2 = ["Base", "He", "Ours"]
     yticks = ["0", "0.5", "1", "1.2"]
 
-    fig, (ax0) = plt.subplots(ncols=1, figsize=(9,6))
-
+    fig, (ax0, ax1) = plt.subplots(ncols=2, figsize=(12,6))
+    
     ax0.bar(np.arange(3), single_instance_values, color="dimgray")
     ax0.set_title("Performance Comparison")
     ax0.set_ylabel("Normalized Response Time", multialignment='center')
     ax0.set_xticks([0, 1, 2])
-    ax0.set_xticklabels(xticks)
+    ax0.set_xticklabels(xticks_1)
     ax0.set_yticks([0, 0.5, 1, 1.2])
     ax0.set_yticklabels(yticks)
     ax0.set_ylim(bottom = 0.0, top = 1.2)
 
-    # ax0.set_xlabel("(Optimization A, Optimization B, Optimization C)", fontsize = 10, loc="left")
+    ax1.bar(np.arange(3), multi_instance_values, color="dimgray")
+    ax1.set_title("Performance Comparison")
+    ax1.set_ylabel("Normalized Response Time", multialignment='center')
+    ax1.set_xticks([0, 1, 2])
+    ax1.set_xticklabels(xticks_2)
+    ax1.set_yticks([0, 0.5, 1, 1.2])
+    ax1.set_yticklabels(yticks)
+    ax1.set_ylim(bottom = 0.0, top = 1.2)
+
     ax0.xaxis.set_label_coords(0.17,-0.075)
 
+    ax1.xaxis.set_label_coords(0.17,-0.075)
+
     print(single_instance_values)
+    print(multi_instance_values)
 
     plt.savefig(save_path)
 
@@ -198,6 +214,9 @@ if __name__ == "__main__":
 
     single_instance_Park_avg, single_instance_Park_max = [], []
 
+    single_instance_He_avg, single_instance_He_max = [], []
+    multi_instance_He_avg, multi_instance_He_max = [], []
+
     real_length = []
     for i in range(dag_num_):
         name = "DAG_" + str(i+1).zfill(3)
@@ -273,6 +292,19 @@ if __name__ == "__main__":
         single_instance_Park_max.append(n1/base_max)
         single_instance_Park_avg.append(n2/base_avg)
 
+        ## He Experiment Result
+
+        file_path = result_dir + "single-instance_4-core_He/" + name + ".csv"
+        n1, n2, n3, n4 =read_data(file_path)
+        single_instance_He_max.append(n1/base_max)
+        single_instance_He_avg.append(n2/base_avg)
+
+        file_path = result_dir + "multi-instance_4-core_He/" + name + ".csv"
+        n1, n2, n3, n4 =read_data(file_path)
+        multi_instance_He_max.append(n1/base_max)
+        multi_instance_He_avg.append(n2/base_avg)
+
+
     create_histogram_count(parent_dir + "/histogram/4-core_max_count.png", [single_instance_O1_max, single_instance_O1_O3_max, \
                      single_instance_O1_O2_max, single_instance_O1_O2_O3_max], [multi_instance_O1_max, multi_instance_O1_O3_max, \
                      multi_instance_O1_O2_max, multi_instance_O1_O2_O3_max], real_length)
@@ -320,13 +352,20 @@ if __name__ == "__main__":
     single_instance_Park_max = list_average(single_instance_Park_max)
     single_instance_Park_avg = list_average(single_instance_Park_avg)
 
+    single_instance_He_max = list_average(single_instance_He_max)
+    single_instance_He_avg = list_average(single_instance_He_avg)
+        
+    multi_instance_He_max = list_average(multi_instance_He_max)
+    multi_instance_He_avg = list_average(multi_instance_He_avg)
+
     create_histogram_value(parent_dir + "/histogram/4-core_max.png", [single_instance_max, single_instance_O3_max, \
                      single_instance_O2_max, single_instance_O2_O3_max, single_instance_O1_max, single_instance_O1_O3_max, \
                      single_instance_O1_O2_max, single_instance_O1_O2_O3_max], [multi_instance_max, multi_instance_O3_max, \
                      multi_instance_O2_max, multi_instance_O2_O3_max, multi_instance_O1_max, multi_instance_O1_O3_max, \
                      multi_instance_O1_O2_max, multi_instance_O1_O2_O3_max])
     
-    create_histogram_value_Park(parent_dir + "/histogram/4-core_Park.png", [single_instance_max, single_instance_Park_max, single_instance_O1_max])
+    create_histogram_value_Park_He(parent_dir + "/histogram/4-core_Park_He.png", [single_instance_max, single_instance_Park_max, single_instance_O1_max], \
+                     [multi_instance_O1_max, multi_instance_He_max, multi_instance_O1_O3_max])
 
     # create_histogram_value(parent_dir + "/histogram/4-core_avg.png", [single_instance_avg, single_instance_O3_avg, \
     #                  single_instance_O2_avg, single_instance_O2_O3_avg, single_instance_O1_avg, single_instance_O1_O3_avg, \
