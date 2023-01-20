@@ -72,3 +72,16 @@ if __name__ == "__main__":
     node_list = optimize_spin_rate(node_list, raw_data)
     node_list = node_priority_assign(node_list)
     create_csv_file(node_list, save_path)
+
+    result_dir = pkg_path + "/Autoware/after/"
+
+    entry_file_path= result_dir + "lidar_republisher.csv"
+    leaf_file_path = result_dir + "twist_gate.csv"
+
+    start_idx_list, end_idx_list, start_time_list, end_time_list = read_profiling_file(entry_file_path, leaf_file_path)
+    response_time_list = calculate_response_time(start_idx_list, end_idx_list, start_time_list, end_time_list)
+
+    print("After Optmization")
+    print("Average: " + str(get_avg_response_time(response_time_list)))
+    print("Worst-Case: " + str(get_max_response_time(response_time_list)))
+    print("")
